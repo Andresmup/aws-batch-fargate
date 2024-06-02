@@ -13,5 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code into the container
 COPY . .
 
-# Run the application
+# Default command
 ENTRYPOINT ["python", "main.py"]

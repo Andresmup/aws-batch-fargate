@@ -29,11 +29,11 @@ def main(source_bucket, source_file, destination_bucket, destination_file):
 
     s3.put_object(Bucket=destination_bucket, Key=destination_file, Body=json_data)
 
-if __name__ == "__main__":
+f __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Source and destination, bucket and file are required.")
-    parser.add_argument("source_bucket", help="Source bucket is required")
-    parser.add_argument("source_file", help="Source file name is required")
-    parser.add_argument("destination_bucket", help="Destination bucket is required")
-    parser.add_argument("destination_file", help="Destination file name is required")
+    parser.add_argument("--source_bucket", required=True, help="Source bucket is required")
+    parser.add_argument("--source_file", required=True, help="Source file name is required")
+    parser.add_argument("--destination_bucket", required=True, help="Destination bucket is required")
+    parser.add_argument("--destination_file", required=True, help="Destination file name is required")
     args = parser.parse_args()
     main(args.source_bucket, args.source_file, args.destination_bucket, args.destination_file)
