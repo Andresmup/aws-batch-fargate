@@ -1,4 +1,6 @@
-#
+# AWS BATCH FARGATE
+
+
 ## CONFIGURE LOCAL SETUP
 
 ```sh
@@ -312,3 +314,84 @@ jobs:
 > AWS_IAM_ROLE with the ARN of the role to assume
 
 > AWS_REGION with the region (eg: us-east-1)
+
+
+## AWS BATCH SETUP
+```sh
+aws batch create-compute-environment \
+--compute-environment-name FargateProcessing \
+--type MANAGED \
+--state ENABLED \
+--compute-resources type=FARGATE,maxvCpus=1,subnets=subnet-02207f9fc63571a2a,subnet-01668d4e4573f5b0d,subnet-087cec452a2904873,subnet-0a6f8f4ff98c77bc1,subnet-0f7281e79acfe10b3,subnet-03586428c9f634bef,securityGroupIds=sg-0e8f442b689afa58b \
+--service-role arn:aws:iam::$aws_account_id:role/aws-service-role/batch.amazonaws.com/AWSServiceRoleForBatch
+```
+
+```sh
+aws batch create-job-queue \
+--job-queue-name TestQueue \
+--state ENABLED \
+--priority 1 \
+--compute-environment-order order=1,computeEnvironment=arn:aws:batch:us-east-1:$aws_account_id:compute-environment/Test
+```
+
+```sh
+touch job-definition.json
+```
+
+```json
+{
+  "jobDefinitionName": "Test",
+  "type": "container",
+  "containerProperties": {
+    "image": "$aws_account_id.dkr.ecr.us-east-1.amazonaws.com/batch-payment-processing:latest",
+    "command": [
+      "--source_bucket",
+      "prod-source-payments-for-processing",
+      "--source_file",
+      "payments.csv",
+      "--destination_bucket",
+      "prod-destination-payments-batch-processed",
+      "--destination_file",
+      "results.json"
+    ],
+    "jobRoleArn": "arn:aws:iam::$aws_account_id:role/ecsS3ProdPayment",
+    "executionRoleArn": "arn:aws:iam::$aws_account_id:role/ecsTaskExecutionRole",
+    "resourceRequirements": [
+      {
+        "value": "1.0",
+        "type": "VCPU"
+      },
+      {
+        "value": "2048",
+        "type": "MEMORY"
+      }
+    ],
+    "networkConfiguration": {
+      "assignPublicIp": "ENABLED"
+    },
+    "fargatePlatformConfiguration": {
+      "platformVersion": "LATEST"
+    },
+    "runtimePlatform": {
+      "operatingSystemFamily": "LINUX",
+      "cpuArchitecture": "X86_64"
+    }
+  },
+  "platformCapabilities": [
+    "FARGATE"
+  ],
+  "containerOrchestrationType": "ECS"
+}
+```
+
+```sh
+aws batch register-job-definition --cli-input-json file://job-definition.json
+```
+
+
+```sh
+aws batch submit-job \
+--job-name TestJobExecution \
+--job-queue arn:aws:batch:us-east-1:$aws_account_id:job-queue/Test \
+--job-definition arn:aws:batch:us-east-1:$aws_account_id:job-definition/Test:
+```
