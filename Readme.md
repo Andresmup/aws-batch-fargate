@@ -317,6 +317,13 @@ jobs:
 
 
 ## AWS BATCH SETUP
+
+```sh
+aws ec2 create-vpc-endpoint \
+--vpc-id vpc-0b44a2428eb1e2f07 \
+--service-name com.amazonaws.us-east-1.s3
+```
+
 ```sh
 aws batch create-compute-environment \
 --compute-environment-name FargateProcessing \
